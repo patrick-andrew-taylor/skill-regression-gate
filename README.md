@@ -82,10 +82,24 @@ make fingerprint  # print the current skill fingerprint
 `make record` shells out to the `claude` CLI in headless mode with `--tools ""`,
 `--setting-sources ""`, `--strict-mcp-config` and `--disable-slash-commands`,
 from an empty scratch directory. The skill text is the only thing steering the
-model. In CI, the same recording runs via the manual
-[`record-transcripts`](.github/workflows/record.yml) workflow, which needs an
-`ANTHROPIC_API_KEY` secret and opens a pull request with the refreshed
-transcripts.
+model. Locally it authenticates with your existing `claude` login — no API key.
+
+In CI, the same recording runs via the manual
+[`record-transcripts`](.github/workflows/record.yml) workflow, which opens a
+pull request with the refreshed transcripts. **This repository holds no
+`ANTHROPIC_API_KEY` secret.** That job authenticates with Workload Identity
+Federation: GitHub mints a short-lived OIDC token for the run, Anthropic
+exchanges it for an access token that expires in minutes, and nothing static is
+stored anywhere. The four `ANTHROPIC_*` ids in the workflow are identifiers,
+not credentials.
+
+To enable it, run Claude Console → Settings → Workload identity → Connect
+workload → GitHub Actions, then paste the resulting `fdrl_…`, `svac_…`,
+organization id and (if the rule spans workspaces) `wrkspc_…` into the
+workflow's `env:` block. Scope the federation rule to this repository —
+`subject_prefix: "repo:patrick-andrew-taylor/skill-regression-gate:*"` plus a
+`repository_owner` claim — and keep the job behind a reviewed `record`
+environment, because the repo is public and the job spends tokens.
 
 ## Adding a case
 
