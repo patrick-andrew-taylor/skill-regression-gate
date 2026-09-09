@@ -38,6 +38,28 @@ jobs:
             core.setSecret(token);
             core.exportVariable('JWT', token);
 
+      # A denied exchange returns an opaque 401, so print the claims we are
+      # actually presenting. These are not secrets -- they describe the workflow
+      # run -- and they are what the federation rule matches against.
+      - name: Show the claims being presented
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, json, os
+          payload = os.environ["JWT"].split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          interesting = [
+              "iss", "aud", "sub", "repository", "repository_owner",
+              "repository_owner_id", "event_name", "environment", "ref",
+              "workflow", "actor", "job_workflow_ref",
+          ]
+          print(json.dumps({k: claims.get(k) for k in interesting}, indent=2))
+          missing = [k for k in ("environment", "repository_owner_id") if k not in claims]
+          if missing:
+              print(f"\nNOTE: these claims are absent from the token: {missing}")
+          PY
+
       - name: Exchange for an Anthropic access token
         run: |
           set -euo pipefail
