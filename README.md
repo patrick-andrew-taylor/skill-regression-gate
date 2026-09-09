@@ -93,13 +93,16 @@ exchanges it for an access token that expires in minutes, and nothing static is
 stored anywhere. The four `ANTHROPIC_*` ids in the workflow are identifiers,
 not credentials.
 
-To enable it, run Claude Console → Settings → Workload identity → Connect
-workload → GitHub Actions, then paste the resulting `fdrl_…`, `svac_…`,
-organization id and (if the rule spans workspaces) `wrkspc_…` into the
-workflow's `env:` block. Scope the federation rule to this repository —
-`subject_prefix: "repo:patrick-andrew-taylor/skill-regression-gate:*"` plus a
-`repository_owner` claim — and keep the job behind a reviewed `record`
-environment, because the repo is public and the job spends tokens.
+The federation rule is scoped to this repository, to `workflow_dispatch` events,
+to the immutable `repository_owner_id`, and to the reviewed `record`
+environment — so only a manually dispatched, human-approved run of this repo's
+own workflow can mint a token.
+
+[`anthropic-wif-test`](.github/workflows/anthropic-wif-test.yml) is a smoke test
+for that chain: it performs the exchange and fails if it is denied, without
+calling a model. Run it when something in the auth path needs verifying. A
+denied exchange returns a deliberately opaque 401 — the real reason is under
+Claude Console → Settings → Workload identity → History.
 
 ## Adding a case
 
