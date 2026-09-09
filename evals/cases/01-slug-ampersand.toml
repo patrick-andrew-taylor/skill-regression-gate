@@ -1,0 +1,57 @@
+id = "slug_ampersand"
+title = "Ampersand is omitted from the slug"
+targets = "SKILL.md step 3 — Derive the slug"
+
+prompt = """
+Add this recipe to the cookbook.
+
+Title: Mac & Cheese Casserole
+Category: Entrees
+Tags: Vegetarian
+Author: pjt
+Photo: none
+
+Ingredients:
+- Elbow macaroni, 1 lb
+- Sharp cheddar, 3 cups shredded
+- Whole milk, 2 cups
+- Butter, 4 tbsp
+- All-purpose flour, 1/4 cup
+- Breadcrumbs, 1 cup
+
+Instructions:
+1. Boil the macaroni to just under al dente and drain.
+2. Make a roux with the butter and flour, then whisk in the milk.
+3. Melt in the cheddar and fold in the drained macaroni.
+4. Top with breadcrumbs and bake at 375F for 25 minutes.
+"""
+
+[[checks]]
+id = "one_recipe_file"
+kind = "recipe_file_present"
+why = "The skill says to create exactly one file at _recipes/<slug>.md."
+
+[[checks]]
+id = "slug_value"
+kind = "recipe_filename_equals"
+expect = "mac-cheese-casserole"
+why = "Step 3 gives this exact worked example: ampersands are omitted, not turned into 'and' or left in place."
+
+[[checks]]
+id = "slug_shape"
+kind = "slug_wellformed"
+why = "Step 3 requires consecutive hyphens collapsed and no leading/trailing hyphen."
+
+[[checks]]
+id = "author"
+kind = "frontmatter_scalar_equals"
+key = "author"
+expect = "pjt"
+why = "Step 5 frontmatter template pins author to pjt."
+
+[[checks]]
+id = "category"
+kind = "frontmatter_list_equals"
+key = "categories"
+expect = ["Entrees"]
+why = "categories is an inline list drawn from the fixed enum in step 2."

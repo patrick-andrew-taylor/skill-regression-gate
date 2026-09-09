@@ -1,0 +1,50 @@
+id = "no_image"
+title = "No photo means the image block is omitted entirely"
+targets = "SKILL.md step 5 — 'Without image' template"
+
+prompt = """
+Add this recipe to the cookbook. I don't have a photo for it.
+
+Title: Smashed Cucumber Salad
+Category: Side Dishes
+Tags: Vegan
+Author: pjt
+
+Ingredients:
+- Persian cucumbers, 6
+- Rice vinegar, 2 tbsp
+- Toasted sesame oil, 1 tbsp
+- Soy sauce, 1 tbsp
+- Garlic, 2 cloves grated
+- Chili crisp, 1 tsp
+
+Instructions:
+1. Smash the cucumbers with the flat of a knife and tear into pieces.
+2. Salt them and drain in a colander for 15 minutes.
+3. Whisk the remaining ingredients into a dressing.
+4. Toss and serve cold.
+"""
+
+[[checks]]
+id = "one_recipe_file"
+kind = "recipe_file_present"
+why = "The skill says to create exactly one file at _recipes/<slug>.md."
+
+[[checks]]
+id = "image_omitted"
+kind = "frontmatter_key_absent"
+key = "image"
+why = "Step 5 is explicit: without an image, omit the image block entirely. An empty or placeholder image block breaks the Jekyll layout."
+
+[[checks]]
+id = "category"
+kind = "frontmatter_list_equals"
+key = "categories"
+expect = ["Side Dishes"]
+why = "'Side Dishes' is a two-word member of the enum and must survive verbatim."
+
+[[checks]]
+id = "no_sips"
+kind = "shell_regex_absent"
+pattern = 'sips'
+why = "With no source image there is nothing to convert, so no sips command should be emitted."

@@ -1,0 +1,66 @@
+id = "kramdown_sections"
+title = "Multi-section recipe keeps a blank line between heading and table"
+targets = "SKILL.md step 5 — CRITICAL Kramdown rule"
+
+prompt = """
+Add this recipe to the cookbook. It has two separate ingredient groups and two
+separate stages, so please keep them as labelled sections rather than one big list.
+
+Title: Baked Ziti
+Category: Entrees
+Tags: Vegetarian
+Author: pjt
+Photo: none
+
+Ingredients for the sauce:
+- Crushed tomatoes, one 28oz can
+- Olive oil, 3 tbsp
+- Garlic, 4 cloves minced
+- Red pepper flakes, 1/2 tsp
+
+Ingredients for the assembly:
+- Ziti, 1 lb
+- Whole milk ricotta, 15 oz
+- Low-moisture mozzarella, 2 cups shredded
+- Parmesan, 1/2 cup grated
+
+Sauce steps:
+1. Warm the oil, garlic and pepper flakes until fragrant.
+2. Add the tomatoes and simmer 20 minutes.
+
+Assembly steps:
+1. Boil the ziti two minutes shy of al dente.
+2. Fold the pasta with the sauce and ricotta.
+3. Layer into a dish, top with mozzarella and parmesan.
+4. Bake at 400F for 25 minutes.
+"""
+
+[[checks]]
+id = "one_recipe_file"
+kind = "recipe_file_present"
+why = "The skill says to create exactly one file at _recipes/<slug>.md."
+
+[[checks]]
+id = "kramdown_blank_line"
+kind = "heading_table_blank_line"
+why = "The CRITICAL rule in step 5: a heading immediately followed by a table row makes Kramdown emit raw pipe text instead of a table. This is a user-visible rendering bug on the live site."
+
+[[checks]]
+id = "ingredient_sections"
+kind = "subsection_count"
+under = "Ingredients"
+expect = 2
+why = "Step 5 shows a multi-section ingredients template using ### subsections."
+
+[[checks]]
+id = "instruction_sections"
+kind = "subsection_count"
+under = "Instructions"
+expect = 2
+why = "Step 5 shows a multi-section instructions template using ### subsections."
+
+[[checks]]
+id = "table_separator"
+kind = "body_regex_present"
+pattern = '\|\s*:-:\s*\|\s*:-:\s*\|'
+why = "Step 5 pins the centred separator row |:-:|:-:| for ingredient tables."

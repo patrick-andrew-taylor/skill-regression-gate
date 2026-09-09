@@ -1,0 +1,50 @@
+id = "slug_punctuation"
+title = "Apostrophes and parentheses are stripped from the slug"
+targets = "SKILL.md step 3 — Derive the slug"
+
+prompt = """
+Add this recipe to the cookbook.
+
+Title: Mom's Sunday Gravy (Nonna's Way)
+Category: Entrees
+Tags: Meat
+Author: pjt
+Photo: none
+
+Ingredients:
+- San Marzano tomatoes, two 28oz cans
+- Pork neck bones, 2 lbs
+- Italian sausage, 1 lb
+- Yellow onion, 1 large diced
+- Garlic, 6 cloves
+- Basil, 1 handful
+
+Instructions:
+1. Brown the pork bones and sausage in a heavy pot, then set aside.
+2. Soften the onion and garlic in the rendered fat.
+3. Crush in the tomatoes, return the meat, and simmer 4 hours.
+4. Finish with torn basil.
+"""
+
+[[checks]]
+id = "one_recipe_file"
+kind = "recipe_file_present"
+why = "The skill says to create exactly one file at _recipes/<slug>.md."
+
+[[checks]]
+id = "slug_value"
+kind = "recipe_filename_equals"
+expect = "moms-sunday-gravy-nonnas-way"
+why = "Step 3 worked example: \"Mom's Soup\" -> moms-soup. Apostrophes and parentheses are dropped, and the resulting double hyphens collapse."
+
+[[checks]]
+id = "slug_shape"
+kind = "slug_wellformed"
+why = "Dropping '(' and ')' leaves adjacent hyphens that step 3 requires be collapsed."
+
+[[checks]]
+id = "tags"
+kind = "frontmatter_list_equals"
+key = "tags"
+expect = ["Meat"]
+why = "tags is an inline list drawn from the fixed enum in step 2."

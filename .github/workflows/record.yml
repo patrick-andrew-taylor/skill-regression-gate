@@ -1,0 +1,80 @@
+name: record-transcripts
+
+# The live half of the harness. This is the only job that calls a model, it is
+# never a required check, and it never runs on its own — you ask for it.
+#
+# Requires an ANTHROPIC_API_KEY repository secret.
+
+on:
+  workflow_dispatch:
+    inputs:
+      case:
+        description: 'Single case id to re-record (blank = all cases)'
+        required: false
+        type: string
+      model:
+        description: 'Model to record against'
+        required: false
+        default: claude-sonnet-5
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  record:
+    name: re-record transcripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check for the API key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::error title=Missing secret::Set the ANTHROPIC_API_KEY repository secret before running this workflow."
+            exit 1
+          fi
+
+      - name: Install the Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Record
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+          ARGS=(--mode record --model "${{ inputs.model }}")
+          if [ -n "${{ inputs.case }}" ]; then
+            ARGS+=(--case "${{ inputs.case }}")
+          fi
+          python3 -m gate run "${ARGS[@]}"
+
+      - name: Grade the fresh transcripts
+        run: python3 -m gate run --mode replay --model "${{ inputs.model }}"
+
+      - name: Open a pull request with the new transcripts
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: re-record eval transcripts"
+          branch: chore/re-record-transcripts
+          delete-branch: true
+          title: "chore: re-record eval transcripts"
+          body: |
+            Transcripts re-recorded by the `record-transcripts` workflow
+            against `${{ inputs.model }}`.
+
+            The `skill-gate` check on this PR grades these fresh transcripts
+            against the ones on `main`, so any drift shows up as a normal
+            before/after comparison.
+          add-paths: evals/cassettes

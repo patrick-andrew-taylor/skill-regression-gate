@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "case_id": "image_thumbnail",
+  "model": "claude-sonnet-5",
+  "skill_fingerprint": "9d04f52020c2",
+  "stimulus_key": "90ba53f97ec924eb",
+  "recorded_at": "2026-09-09T19:31:58+00:00",
+  "recorder": "claude-cli",
+  "session_id": "470cb735-dc41-47c4-bf37-6536ad4868d9",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 682,
+    "cost_usd": 0.0153733
+  },
+  "output": "<<<FILE: assets/img/blueberry-galette.jpg>>>\n[processed image output]\n<<<END FILE>>>\n\n<<<FILE: assets/img/blueberry-galette-300x400.jpg>>>\n[processed thumbnail output]\n<<<END FILE>>>\n\n<<<FILE: _recipes/blueberry-galette.md>>>\n---\nauthor: pjt\ntitle: Blueberry Galette\nimage:\n  path: /assets/img/blueberry-galette.jpg\n  thumbnail: /assets/img/blueberry-galette-300x400.jpg\n  caption: \"A rustic blueberry galette fresh from the oven.\"\ncategories: [Desserts]\ntags: [Vegetarian]\n---\n\nA rustic, free-form tart with a buttery crust and a juicy blueberry filling.\n\n## Ingredients\n\n| Ingredient | Quantity |\n|:-:|:-:|\n| All-purpose flour | 1.25 cups |\n| Cold unsalted butter, cubed | 8 tbsp |\n| Ice water | 3 tbsp |\n| Blueberries | 3 cups |\n| Granulated sugar | 1/3 cup |\n| Cornstarch | 1 tbsp |\n| Lemon zest | 1 tsp |\n\n## Instructions\n\n1. Cut the butter into the flour until pea-sized, then bind with ice water.\n2. Chill the dough one hour, then roll into a rough 12 inch round.\n3. Toss the blueberries with sugar, cornstarch and zest and mound in the centre.\n4. Fold the border over the fruit and bake at 400F for 40 minutes.\n<<<END FILE>>>\n\n<<<SHELL>>>\nsips -s format jpeg /Users/pjt/Pictures/galette.png --out assets/img/blueberry-galette.jpg\nsips -s format jpeg -z 400 300 /Users/pjt/Pictures/galette.png --out assets/img/blueberry-galette-300x400.jpg\n<<<END SHELL>>>"
+}

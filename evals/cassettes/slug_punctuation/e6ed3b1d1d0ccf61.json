@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "case_id": "slug_punctuation",
+  "model": "claude-sonnet-5",
+  "skill_fingerprint": "9d04f52020c2",
+  "stimulus_key": "e6ed3b1d1d0ccf61",
+  "recorded_at": "2026-09-09T19:31:28+00:00",
+  "recorder": "claude-cli",
+  "session_id": "f8b8274d-6732-4565-9dfd-cca9be130277",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 363,
+    "cost_usd": 0.0101983
+  },
+  "output": "<<<FILE: _recipes/moms-sunday-gravy-nonnas-way.md>>>\n---\nauthor: pjt\ntitle: Mom's Sunday Gravy (Nonna's Way)\ncategories: [Entrees]\ntags: [Meat]\n---\n\nA slow-simmered Sunday gravy made with pork neck bones and Italian sausage, just like Nonna made it.\n\n## Ingredients\n\n| Ingredient | Quantity |\n|:-:|:-:|\n| San Marzano tomatoes | Two 28oz cans |\n| Pork neck bones | 2 lbs |\n| Italian sausage | 1 lb |\n| Yellow onion, diced | 1 large |\n| Garlic | 6 cloves |\n| Basil | 1 handful |\n\n## Instructions\n\n1. Brown the pork bones and sausage in a heavy pot, then set aside.\n2. Soften the onion and garlic in the rendered fat.\n3. Crush in the tomatoes, return the meat, and simmer 4 hours.\n4. Finish with torn basil.\n<<<END FILE>>>"
+}

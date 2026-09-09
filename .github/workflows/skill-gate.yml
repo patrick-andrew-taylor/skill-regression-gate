@@ -1,0 +1,122 @@
+name: skill-gate
+
+# The required check. It makes no model calls: every transcript it grades was
+# recorded once against a real model and committed, so a given commit always
+# produces the same verdict.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: skill-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: skill regression gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # The graders decide red vs green, so they are tested before they are trusted.
+      - name: Test the harness
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Replay eval suite — this branch
+        run: python3 -m gate run --mode replay --out "$RUNNER_TEMP/head.json"
+
+      - name: Replay eval suite — merge base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          MERGE_BASE="$(git merge-base "$BASE_SHA" HEAD || echo "$BASE_SHA")"
+          echo "comparing against $MERGE_BASE"
+          git worktree add --detach "$RUNNER_TEMP/base" "$MERGE_BASE"
+          # Grade the base branch's skill and transcripts with *this* branch's
+          # grader, so a change to the harness cannot masquerade as a change in
+          # skill quality.
+          python3 -m gate run --mode replay \
+            --skill  "$RUNNER_TEMP/base/skills/add-recipe/SKILL.md" \
+            --cases  "$RUNNER_TEMP/base/evals/cases" \
+            --cassettes "$RUNNER_TEMP/base/evals/cassettes" \
+            --out    "$RUNNER_TEMP/base.json"
+
+      - name: Compare and apply gate policy
+        id: compare
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          BASE_ARG=""
+          if [ -f "$RUNNER_TEMP/base.json" ]; then
+            BASE_ARG="--base $RUNNER_TEMP/base.json"
+          fi
+          python3 -m gate compare \
+            --head "$RUNNER_TEMP/head.json" \
+            $BASE_ARG \
+            --policy gate.toml \
+            --base-label "${{ github.event.pull_request.base.ref || 'main' }}" \
+            --head-label "${{ github.event.pull_request.head.ref || github.ref_name }}" \
+            --out "$RUNNER_TEMP/report.md"
+
+      - name: Publish to job summary
+        if: always()
+        run: cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-gate-reports
+          path: |
+            ${{ runner.temp }}/head.json
+            ${{ runner.temp }}/base.json
+            ${{ runner.temp }}/report.md
+          if-no-files-found: warn
+
+      - name: Post before/after comparison on the PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          BODY_FILE="$RUNNER_TEMP/report.md"
+          [ -f "$BODY_FILE" ] || { echo "no report to post"; exit 0; }
+          # Update the existing comment rather than stacking a new one per push.
+          EXISTING="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq 'map(select(.body | contains("<!-- skill-regression-gate -->"))) | .[0].id // empty')"
+          if [ -n "$EXISTING" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" \
+              -F body=@"$BODY_FILE" > /dev/null
+            echo "updated comment $EXISTING"
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" \
+              -F body=@"$BODY_FILE" > /dev/null
+            echo "created comment"
+          fi
+
+      - name: Enforce the verdict
+        if: always()
+        run: |
+          if [ "${{ steps.compare.outcome }}" != "success" ]; then
+            echo "::error title=Skill regression gate::This change weakens the skill under test. See the PR comment for the before/after comparison."
+            exit 1
+          fi
+          echo "no regression detected"

@@ -1,0 +1,64 @@
+id = "image_thumbnail"
+title = "Thumbnail is generated with sips height-then-width"
+targets = "SKILL.md step 4 — image processing; step 5 — 'With image' template"
+
+prompt = """
+Add this recipe to the cookbook. The photo is at /Users/pjt/Pictures/galette.png.
+
+Title: Blueberry Galette
+Category: Desserts
+Tags: Vegetarian
+Author: pjt
+
+Ingredients:
+- All-purpose flour, 1.25 cups
+- Cold unsalted butter, 8 tbsp cubed
+- Ice water, 3 tbsp
+- Blueberries, 3 cups
+- Granulated sugar, 1/3 cup
+- Cornstarch, 1 tbsp
+- Lemon zest, 1 tsp
+
+Instructions:
+1. Cut the butter into the flour until pea-sized, then bind with ice water.
+2. Chill the dough one hour, then roll into a rough 12 inch round.
+3. Toss the blueberries with sugar, cornstarch and zest and mound in the centre.
+4. Fold the border over the fruit and bake at 400F for 40 minutes.
+"""
+
+[[checks]]
+id = "one_recipe_file"
+kind = "recipe_file_present"
+why = "The skill says to create exactly one file at _recipes/<slug>.md."
+
+[[checks]]
+id = "image_path"
+kind = "frontmatter_matches"
+key = "image.path"
+pattern = '^/assets/img/blueberry-galette\.jpg$'
+why = "Step 5 'With image' template pins the full-size path to /assets/img/<slug>.jpg."
+
+[[checks]]
+id = "image_thumbnail"
+kind = "frontmatter_matches"
+key = "image.thumbnail"
+pattern = '^/assets/img/blueberry-galette-300x400\.jpg$'
+why = "Step 5 pins the thumbnail filename suffix to -300x400.jpg."
+
+[[checks]]
+id = "sips_fullsize"
+kind = "shell_regex_present"
+pattern = 'sips[^\n]*-s format jpeg[^\n]*--out assets/img/blueberry-galette\.jpg'
+why = "Step 4 converts the source to a full-size JPEG before the thumbnail."
+
+[[checks]]
+id = "sips_thumb_order"
+kind = "shell_regex_present"
+pattern = 'sips[^\n]*-z\s+400\s+300'
+why = "sips -z takes HEIGHT then WIDTH. A 300x400 portrait thumbnail therefore needs '-z 400 300'. Step 4 calls this out explicitly because the argument order is counter-intuitive."
+
+[[checks]]
+id = "sips_thumb_not_reversed"
+kind = "shell_regex_absent"
+pattern = 'sips[^\n]*-z\s+300\s+400'
+why = "'-z 300 400' silently produces a 225x300 landscape-constrained thumbnail, which crops the recipe card on the site."

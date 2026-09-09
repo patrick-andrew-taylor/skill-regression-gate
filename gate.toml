@@ -1,0 +1,9 @@
+# Gate policy.
+#
+# The primary rule is comparative: any check that passes on the base branch and
+# fails on the pull request is a regression, full stop. min_score is a secondary
+# absolute floor so that a branch cut from an already-broken base cannot coast.
+
+[gate]
+min_score = 1.0
+allow_new_failures = false

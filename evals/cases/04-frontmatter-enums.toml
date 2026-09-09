@@ -1,0 +1,59 @@
+id = "frontmatter_enums"
+title = "Category and tag are chosen from the fixed enums"
+targets = "SKILL.md step 2 — enums; step 5 — frontmatter template"
+
+prompt = """
+Add this recipe to the cookbook. It is fully plant based.
+
+Title: Red Lentil and Coconut Soup
+Author: pjt
+Photo: none
+
+Ingredients:
+- Red lentils, 1.5 cups
+- Full-fat coconut milk, one 14oz can
+- Vegetable stock, 4 cups
+- Yellow onion, 1 diced
+- Ginger, 1 tbsp grated
+- Turmeric, 1 tsp
+- Lime, 1 juiced
+
+Instructions:
+1. Sweat the onion and ginger until translucent.
+2. Add turmeric, lentils and stock, then simmer 20 minutes.
+3. Stir in the coconut milk and warm through.
+4. Finish with lime juice off the heat.
+"""
+
+[[checks]]
+id = "one_recipe_file"
+kind = "recipe_file_present"
+why = "The skill says to create exactly one file at _recipes/<slug>.md."
+
+[[checks]]
+id = "category"
+kind = "frontmatter_list_equals"
+key = "categories"
+expect = ["Soups"]
+why = "Soups is the only member of the step 2 category enum that fits; the model must not invent 'Soup' or 'Vegan'."
+
+[[checks]]
+id = "tag"
+kind = "frontmatter_list_equals"
+key = "tags"
+expect = ["Vegan"]
+why = "The step 2 tag enum is exactly Vegetarian, Vegan, Meat. A plant-based recipe is Vegan."
+
+[[checks]]
+id = "author"
+kind = "frontmatter_scalar_equals"
+key = "author"
+expect = "pjt"
+why = "Step 5 frontmatter template pins author to pjt."
+
+[[checks]]
+id = "title_present"
+kind = "frontmatter_matches"
+key = "title"
+pattern = 'Lentil'
+why = "The title field must carry the human-readable title, not the slug."
