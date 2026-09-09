@@ -3,7 +3,14 @@ name: record-transcripts
 # The live half of the harness. This is the only job that calls a model, it is
 # never a required check, and it never runs on its own — you ask for it.
 #
-# Requires an ANTHROPIC_API_KEY repository secret.
+# Authentication is Workload Identity Federation: GitHub mints a short-lived
+# OIDC token for this run, Anthropic exchanges it for an access token that
+# expires in minutes. There is no ANTHROPIC_API_KEY secret in this repository,
+# and nothing to rotate.
+#
+# The four ids below are identifiers, not credentials — they are safe in plain
+# text. Fill them in from Claude Console → Settings → Workload identity →
+# Connect workload → GitHub Actions.
 
 on:
   workflow_dispatch:
@@ -19,6 +26,7 @@ on:
         type: string
 
 permissions:
+  id-token: write     # required — GitHub only mints an OIDC token when asked
   contents: write
   pull-requests: write
 
@@ -26,6 +34,20 @@ jobs:
   record:
     name: re-record transcripts
     runs-on: ubuntu-latest
+
+    # Gate this behind a reviewed environment: the repo is public and this job
+    # spends tokens. Create the environment in Settings → Environments and add
+    # yourself as a required reviewer.
+    environment: record
+
+    env:
+      ANTHROPIC_FEDERATION_RULE_ID: fdrl_REPLACE_ME
+      ANTHROPIC_ORGANIZATION_ID: 00000000-0000-0000-0000-000000000000
+      ANTHROPIC_SERVICE_ACCOUNT_ID: svac_REPLACE_ME
+      # Only needed when the federation rule spans multiple workspaces.
+      # ANTHROPIC_WORKSPACE_ID: wrkspc_REPLACE_ME
+      ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ github.workspace }}/.gha-jwt
+
     steps:
       - uses: actions/checkout@v4
 
@@ -37,21 +59,22 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Check for the API key
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-            echo "::error title=Missing secret::Set the ANTHROPIC_API_KEY repository secret before running this workflow."
-            exit 1
-          fi
-
       - name: Install the Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
+      # Fetched immediately before recording: GitHub's OIDC token is only valid
+      # for about five minutes. The CLI exchanges it once and caches the
+      # resulting Anthropic token, so one fetch covers a normal run — if the
+      # suite grows past the exchanged token's lifetime, re-run this step.
+      - name: Mint a GitHub OIDC token for Anthropic
+        run: |
+          set -euo pipefail
+          curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+            | jq -er .value > "$ANTHROPIC_IDENTITY_TOKEN_FILE"
+          echo "token minted ($(wc -c < "$ANTHROPIC_IDENTITY_TOKEN_FILE") bytes)"
+
       - name: Record
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -euo pipefail
           ARGS=(--mode record --model "${{ inputs.model }}")
@@ -59,6 +82,10 @@ jobs:
             ARGS+=(--case "${{ inputs.case }}")
           fi
           python3 -m gate run "${ARGS[@]}"
+
+      - name: Drop the identity token
+        if: always()
+        run: rm -f "$ANTHROPIC_IDENTITY_TOKEN_FILE"
 
       - name: Grade the fresh transcripts
         run: python3 -m gate run --mode replay --model "${{ inputs.model }}"
@@ -72,7 +99,8 @@ jobs:
           title: "chore: re-record eval transcripts"
           body: |
             Transcripts re-recorded by the `record-transcripts` workflow
-            against `${{ inputs.model }}`.
+            against `${{ inputs.model }}`, authenticated via Workload Identity
+            Federation (no API key involved).
 
             The `skill-gate` check on this PR grades these fresh transcripts
             against the ones on `main`, so any drift shows up as a normal
