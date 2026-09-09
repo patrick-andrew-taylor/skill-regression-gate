@@ -30,111 +30,22 @@ If `$ARGUMENTS` doesn't include enough information, ask the user for:
 
 ### 3. Derive the slug
 
-The slug is used for the filename, image files, branch name, and URL. Derive it from the recipe title:
-
-1. Lowercase the entire title
-2. Replace spaces with hyphens
-3. Remove or replace any character that is not a letter, digit, or hyphen:
-   - Ampersands (`&`) → omit (e.g. "Mac & Cheese" → `mac-cheese`)
-   - Apostrophes/quotes → omit (e.g. "Mom's Soup" → `moms-soup`)
-   - Commas, parentheses, slashes, and other punctuation → omit
-4. Collapse multiple consecutive hyphens into one
-5. Strip leading and trailing hyphens
+Derive a URL-friendly slug from the recipe title — lowercase, hyphen-separated, punctuation stripped. It is used for the filename, image files, branch name, and URL.
 
 If the resulting slug would collide with an existing file in `_recipes/`, append a short disambiguator (e.g. `-v2`).
 
 ### 4. Process the image (if provided)
 
-Images go in `assets/img/`. Run from the cookbook root:
-
-```bash
-# Full-size JPEG
-sips -s format jpeg <input> --out assets/img/<slug>.jpg
-
-# Thumbnail — portrait 300×400 (note: sips -z takes height then width)
-sips -s format jpeg -z 400 300 <input> --out assets/img/<slug>-300x400.jpg
-```
+Images go in `assets/img/`. Use `sips` from the cookbook root to write a
+full-size JPEG at `<slug>.jpg` and a 300×400 portrait thumbnail at
+`<slug>-300x400.jpg`.
 
 ### 5. Create the recipe file
 
-Create `_recipes/<slug>.md`.
-
-**With image:**
-```markdown
----
-author: pat
-title: <Title>
-image:
-  path: /assets/img/<slug>.jpg
-  thumbnail: /assets/img/<slug>-300x400.jpg
-  caption: "<Short description of the image>"
-categories: [<Category>]
-tags: [<Tag>]
----
-
-<One-sentence description of the recipe.>
-```
-
-**Without image** (omit the `image:` block entirely):
-```markdown
----
-author: pat
-title: <Title>
-categories: [<Category>]
-tags: [<Tag>]
----
-
-<One-sentence description of the recipe.>
-```
-
-**Ingredients — single section** (no `###` heading needed):
-```markdown
-## Ingredients
-
-| Ingredient | Quantity |
-|:-:|:-:|
-| <Ingredient> | <Amount> |
-```
-
-**Ingredients — multiple sections** (e.g. separate sauce and filling):
-```markdown
-## Ingredients
-
-### <Section Name>
-
-| Ingredient | Quantity |
-|:-:|:-:|
-| <Ingredient> | <Amount> |
-
-### <Section Name>
-
-| Ingredient | Quantity |
-|:-:|:-:|
-| <Ingredient> | <Amount> |
-```
-
-**CRITICAL — Kramdown rule:** always put a blank line between a heading (`###`, `##`, etc.) and a table. Without it, the table renders as raw pipe text in the browser.
-
-**Instructions — single section** (no `###` heading needed):
-```markdown
-## Instructions
-
-1. Step one.
-2. Step two.
-```
-
-**Instructions — multiple sections:**
-```markdown
-## Instructions
-
-### <Section Name>
-1. Step one.
-2. Step two.
-
-### <Section Name>
-1. Step one.
-2. Step two.
-```
+Create `_recipes/<slug>.md`: Jekyll frontmatter (author, title, categories,
+tags, plus the image paths when there's a photo) followed by the recipe body —
+ingredients as a table, instructions as a numbered list. Use `###` subsections
+if the recipe has distinct components.
 
 ### 6. Commit and open a PR
 

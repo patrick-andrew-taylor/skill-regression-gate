@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "case_id": "frontmatter_enums",
+  "model": "claude-sonnet-5",
+  "skill_fingerprint": "afc4ec744c96",
+  "stimulus_key": "c9b4e7fbee5e6cdc",
+  "recorded_at": "2026-09-09T19:52:39+00:00",
+  "recorder": "claude-cli",
+  "session_id": "afb47289-52a1-4416-a4f0-4393091e5c0a",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 329,
+    "cost_usd": 0.0094182
+  },
+  "output": "<<<FILE: _recipes/red-lentil-and-coconut-soup.md>>>\n---\nauthor: pat\ntitle: Red Lentil and Coconut Soup\ncategories: [Soups]\ntags: [Vegan, Vegetarian]\n---\n\n### Ingredients\n\n| Ingredient | Amount |\n| --- | --- |\n| Red lentils | 1.5 cups |\n| Full-fat coconut milk | 1 can (14 oz) |\n| Vegetable stock | 4 cups |\n| Yellow onion, diced | 1 |\n| Ginger, grated | 1 tbsp |\n| Turmeric | 1 tsp |\n| Lime, juiced | 1 |\n\n### Instructions\n\n1. Sweat the onion and ginger until translucent.\n2. Add turmeric, lentils and stock, then simmer 20 minutes.\n3. Stir in the coconut milk and warm through.\n4. Finish with lime juice off the heat.\n<<<END FILE>>>"
+}
