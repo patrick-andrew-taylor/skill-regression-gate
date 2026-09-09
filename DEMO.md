@@ -35,6 +35,26 @@ the tree.
 It reads `origin/main` from the local clone, so the whole demo works with the
 network unplugged.
 
+### Watching the run on a second screen
+
+Prefix any step with `make log DO=…` to mirror it to a file as well as the
+terminal:
+
+```bash
+make log DO=gate-ref REF=demo/fix-restore     # instead of: make gate-ref REF=…
+tail -f demo.log                              # in a second window
+```
+
+It appends with a timestamped header per run, so the whole demo reads back as
+one transcript afterwards. The gate's exit status survives the pipe — a red
+state still exits non-zero when logged. `make clean` deliberately leaves
+`demo.log` alone; delete it by hand.
+
+Each run also drops machine-readable artifacts in `.gate/`: `report.md` (the
+Markdown posted to the PR), plus `head.json` and `base.json` (per-check
+results). Those are overwritten on every run, so copy them aside if you want to
+keep a particular state.
+
 PR #1 is the visual backdrop. Its branch is parked on the weakening commit, so it
 opens **red with the merge button blocked**. The green run for the fix commit is
 permanently in that PR's check history (run `34398214838`), and the fix commit

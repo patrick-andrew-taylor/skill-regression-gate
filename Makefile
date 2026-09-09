@@ -4,7 +4,11 @@ SKILL   ?= skills/add-recipe/SKILL.md
 MODEL   ?= claude-sonnet-5
 TMP     ?= .gate
 
-.PHONY: help test replay record gate gate-ref clean fingerprint
+# Where `make log` mirrors run output. Kept outside $(TMP) on purpose, so that
+# `make clean` does not delete the record of the run you just did.
+LOG     ?= demo.log
+
+.PHONY: help test replay record gate gate-ref log clean fingerprint
 
 help:
 	@echo "make test        run the harness unit tests and eval-suite lint"
@@ -12,6 +16,7 @@ help:
 	@echo "make record      re-record transcripts against a real model (needs the claude CLI)"
 	@echo "make gate        replay this branch and compare it against origin/main"
 	@echo "make gate-ref    same, for an arbitrary ref, without moving HEAD (REF=<ref>)"
+	@echo "make log         run any target, mirrored to \$$LOG (DO=<target> [REF=<ref>])"
 	@echo "make fingerprint show the current skill fingerprint"
 
 test:
@@ -77,7 +82,24 @@ gate-ref:
 		--policy gate.toml --base-label main --head-label "$(REF)" \
 		--out $(TMP)/report.md
 
+# Run another target with everything mirrored to $(LOG) as well as the terminal.
+#
+#     make log DO=gate-ref REF=demo/fix-restore
+#     tail -f demo.log          # in a second window, to watch it live
+#
+# Appends with a timestamped header per run, so a whole demo reads back as one
+# transcript. pipefail keeps the target's exit status rather than tee's, so a
+# red state still exits non-zero when logged.
+DO ?= gate-ref
+
+log:
+	@printf '\n===== %s  make %s%s =====\n' \
+		"$$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(DO)" \
+		"$$(test "$(DO)" = gate-ref && echo "  REF=$(REF)")" | tee -a $(LOG)
+	@set -o pipefail; $(MAKE) --no-print-directory $(DO) REF=$(REF) 2>&1 | tee -a $(LOG)
+
 clean:
 	@git worktree remove --force $(TMP)/head 2>/dev/null || true
 	@git worktree remove --force $(TMP)/base 2>/dev/null || true
 	rm -rf $(TMP)
+	@echo "note: $(LOG) left in place; remove it by hand when you are done"
