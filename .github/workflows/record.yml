@@ -41,11 +41,10 @@ jobs:
     environment: record
 
     env:
-      ANTHROPIC_FEDERATION_RULE_ID: fdrl_REPLACE_ME
-      ANTHROPIC_ORGANIZATION_ID: 00000000-0000-0000-0000-000000000000
-      ANTHROPIC_SERVICE_ACCOUNT_ID: svac_REPLACE_ME
-      # Only needed when the federation rule spans multiple workspaces.
-      # ANTHROPIC_WORKSPACE_ID: wrkspc_REPLACE_ME
+      ANTHROPIC_FEDERATION_RULE_ID: fdrl_01KcEEFzU4psq6hNViGYHfdw
+      ANTHROPIC_ORGANIZATION_ID: 90fbe5c2-0824-47a5-8b62-6d90826f5198
+      ANTHROPIC_SERVICE_ACCOUNT_ID: svac_01Dp2yjJ2NVA7AFdm9WxeuBe
+      ANTHROPIC_WORKSPACE_ID: wrkspc_01Fw3i32E6NTXCwctmdCyuTA
       ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ github.workspace }}/.gha-jwt
 
     steps:

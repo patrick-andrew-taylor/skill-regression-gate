@@ -1,0 +1,66 @@
+name: anthropic-wif-test
+
+# A federation smoke test: mints a GitHub OIDC token, exchanges it for an
+# Anthropic access token, and fails if the exchange is denied. It does not call
+# a model and does not touch the eval suite, so it is a cheap way to prove the
+# WIF chain still works without spending tokens.
+#
+# Derived from the Claude Console "Connect workload" wizard, with one change:
+# the job declares `environment: record`, because the federation rule pins the
+# `environment` claim and GitHub only emits that claim for environment-gated
+# jobs.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  call-claude:
+    name: verify the federation exchange
+    runs-on: ubuntu-latest
+    environment: record
+
+    env:
+      ANTHROPIC_FEDERATION_RULE_ID: fdrl_01KcEEFzU4psq6hNViGYHfdw
+      ANTHROPIC_ORGANIZATION_ID: 90fbe5c2-0824-47a5-8b62-6d90826f5198
+      ANTHROPIC_SERVICE_ACCOUNT_ID: svac_01Dp2yjJ2NVA7AFdm9WxeuBe
+      ANTHROPIC_WORKSPACE_ID: wrkspc_01Fw3i32E6NTXCwctmdCyuTA
+
+    steps:
+      - name: Fetch GitHub OIDC token
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const token = await core.getIDToken('https://api.anthropic.com');
+            core.setSecret(token);
+            core.exportVariable('JWT', token);
+
+      - name: Exchange for an Anthropic access token
+        run: |
+          set -euo pipefail
+
+          RESPONSE="$(curl -sS https://api.anthropic.com/v1/oauth/token \
+            -H "content-type: application/json" \
+            --data @- <<JSON
+          {
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "assertion": "$JWT",
+            "federation_rule_id": "$ANTHROPIC_FEDERATION_RULE_ID",
+            "organization_id": "$ANTHROPIC_ORGANIZATION_ID",
+            "service_account_id": "$ANTHROPIC_SERVICE_ACCOUNT_ID",
+            "workspace_id": "$ANTHROPIC_WORKSPACE_ID"
+          }
+          JSON
+          )"
+
+          # Never print the access token itself.
+          echo "$RESPONSE" | jq 'with_entries(if (.key | test("token$")) then .value = "<redacted>" else . end)'
+
+          if ! echo "$RESPONSE" | jq -e '.access_token // empty' >/dev/null; then
+            echo "::error title=WIF exchange denied::A 401 here is deliberately opaque. The deny reason is recorded under Claude Console -> Settings -> Workload identity -> History."
+            exit 1
+          fi
+          echo "federation exchange succeeded"
