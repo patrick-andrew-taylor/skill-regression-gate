@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "case_id": "no_image",
+  "model": "claude-sonnet-5",
+  "skill_fingerprint": "e2628b0ef0db",
+  "stimulus_key": "760794bcd22d5263",
+  "recorded_at": "2026-09-09T19:53:59+00:00",
+  "recorder": "claude-cli",
+  "session_id": "3a818d7c-54b1-4e29-bc39-e491297ed26e",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 346,
+    "cost_usd": 0.009887799999999999
+  },
+  "output": "<<<FILE: _recipes/smashed-cucumber-salad.md>>>\n---\nauthor: pat\ntitle: Smashed Cucumber Salad\ncategories: [Side Dishes]\ntags: [Vegan]\n---\n\nA refreshing, garlicky-spicy cold cucumber salad with a quick soy-sesame dressing.\n\n## Ingredients\n\n| Ingredient | Quantity |\n|:-:|:-:|\n| Persian cucumbers | 6 |\n| Rice vinegar | 2 tbsp |\n| Toasted sesame oil | 1 tbsp |\n| Soy sauce | 1 tbsp |\n| Garlic | 2 cloves, grated |\n| Chili crisp | 1 tsp |\n\n## Instructions\n\n1. Smash the cucumbers with the flat of a knife and tear into pieces.\n2. Salt them and drain in a colander for 15 minutes.\n3. Whisk the remaining ingredients into a dressing.\n4. Toss and serve cold.\n<<<END FILE>>>"
+}

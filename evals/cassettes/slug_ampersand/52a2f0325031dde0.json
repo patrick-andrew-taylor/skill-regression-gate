@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "case_id": "slug_ampersand",
+  "model": "claude-sonnet-5",
+  "skill_fingerprint": "e2628b0ef0db",
+  "stimulus_key": "52a2f0325031dde0",
+  "recorded_at": "2026-09-09T19:53:21+00:00",
+  "recorder": "claude-cli",
+  "session_id": "e7eb719c-a743-4df2-a6d4-7cda6681a7a5",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 353,
+    "cost_usd": 0.021161999999999997
+  },
+  "output": "<<<FILE: _recipes/mac-cheese-casserole.md>>>\n---\nauthor: pat\ntitle: Mac & Cheese Casserole\ncategories: [Entrees]\ntags: [Vegetarian]\n---\n\nA creamy baked macaroni and cheese topped with a crunchy breadcrumb crust.\n\n## Ingredients\n\n| Ingredient | Quantity |\n|:-:|:-:|\n| Elbow macaroni | 1 lb |\n| Sharp cheddar, shredded | 3 cups |\n| Whole milk | 2 cups |\n| Butter | 4 tbsp |\n| All-purpose flour | 1/4 cup |\n| Breadcrumbs | 1 cup |\n\n## Instructions\n\n1. Boil the macaroni to just under al dente and drain.\n2. Make a roux with the butter and flour, then whisk in the milk.\n3. Melt in the cheddar and fold in the drained macaroni.\n4. Top with breadcrumbs and bake at 375F for 25 minutes.\n<<<END FILE>>>"
+}
