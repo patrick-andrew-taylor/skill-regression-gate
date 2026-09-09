@@ -10,15 +10,30 @@ the tenth run-through as on the first.
 
 ## The three states
 
-| State | Git ref | `make gate` says | Exit |
-|---|---|---|---|
-| Green baseline | `main` | 47/47 → 47/47 | 0 |
-| Weakened skill | `origin/chore/condense-add-recipe-skill` (`96b5424`) | 47/47 → **23/47** | 1 |
-| Fix | `demo/fix-restore` (`1bad3a9`) | 47/47 → 47/47 | 0 |
+| State | Git ref | Result |
+|---|---|---|
+| Green baseline | `main` | 47/47 → 47/47, exits 0 |
+| Weakened skill | `origin/chore/condense-add-recipe-skill` (`96b5424`) | 47/47 → **23/47**, `make: *** Error 1` |
+| Fix | `demo/fix-restore` (`1bad3a9`) | 47/47 → 47/47, exits 0 |
 
-`make gate` is exactly what CI runs: replay this ref, replay the merge base with
-*this* ref's grader, diff the two. It reads `origin/main` from the local clone,
-so the whole demo works with the network unplugged.
+Every state is driven by one command:
+
+```bash
+make gate-ref REF=<ref>
+```
+
+That is what CI runs — replay the ref, replay the merge base with *this*
+checkout's grader, diff the two — except that it stages both sides in throwaway
+worktrees instead of checking anything out.
+
+**Stay on `main` for the whole demo. Do not `git switch` to the demo states.**
+The runbook you are reading is a tracked file, so detaching HEAD to a historical
+commit replaces this file with that commit's older version of itself, mid-demo.
+`gate-ref` exists so you never have to. It never moves HEAD and never dirties
+the tree.
+
+It reads `origin/main` from the local clone, so the whole demo works with the
+network unplugged.
 
 PR #1 is the visual backdrop. Its branch is parked on the weakening commit, so it
 opens **red with the merge button blocked**. The green run for the fix commit is
@@ -28,7 +43,9 @@ itself is tagged `demo/fix-restore` so it survives independently of the branch.
 ## Before the room
 
 ```bash
-git switch main && make test && make gate     # 41 tests OK, 47/47 → 47/47
+git switch main && git status        # must be clean; stay here all demo
+make test                            # 41 tests OK
+make gate-ref REF=main               # 47/47 → 47/47
 ```
 
 Open three browser tabs on PR #1: **Files changed**, **Checks**, and the
@@ -48,7 +65,7 @@ the table templates and the `sips` note — the stuff that looks most deletable.
 ## 2 — Baseline is green (1 min)
 
 ```bash
-git switch main && make gate
+make gate-ref REF=main
 ```
 
 **They should see:** 47 checks across 6 cases, 100%, in about a second with no
@@ -67,11 +84,11 @@ Ask the room: *does this break anything?*
 ## 4 — The gate says yes (2 min)
 
 ```bash
-git switch --detach origin/chore/condense-add-recipe-skill && make gate
+make gate-ref REF=origin/chore/condense-add-recipe-skill
 ```
 
 **They should see:** `47/47 → 23/47`, a per-case before/after table, and a
-non-zero exit. Then switch to the **Checks** tab: the same result, and
+failing exit (`make: *** [gate-ref] Error 1`). Then the **Checks** tab: the same result, and
 `skill regression gate` is a *required* check, so the merge button is blocked.
 
 The PR comment carries one expandable block per regression with *why the rule
@@ -99,7 +116,7 @@ would get it wrong without the skill.** See `FINDINGS.md`.
 ## 6 — The fix (1.5 min)
 
 ```bash
-git switch --detach demo/fix-restore && make gate
+make gate-ref REF=demo/fix-restore
 ```
 
 **They should see:** back to 47/47, exit 0. This commit restores steps 3 and 5
@@ -109,12 +126,14 @@ history.
 
 ## 7 — How it stays honest (1 min)
 
+This is the only beat that touches the working tree — it edits `SKILL.md` in
+place and puts it straight back.
+
 ```bash
-git switch main
 make fingerprint
 sed -i '' '1s/^/# tweak\n/' skills/add-recipe/SKILL.md
 make replay                              # every case: MISSING_CASSETTE
-git checkout skills/add-recipe/SKILL.md
+git checkout skills/add-recipe/SKILL.md  # put it back
 ```
 
 **They should see:** `0/47 checks (0%)`, every case `MISSING_CASSETTE`. A
@@ -130,6 +149,8 @@ top. It is still pure replay; no model is called.)
 
 ## 8 — Reset
 
+Nothing moved HEAD, so this is just tidying the scratch directory:
+
 ```bash
-git switch main && git checkout . && make clean
+git status && make clean     # expect a clean tree on main
 ```
