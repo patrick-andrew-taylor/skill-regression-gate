@@ -104,6 +104,31 @@ calling a model. Run it when something in the auth path needs verifying. A
 denied exchange returns a deliberately opaque 401 — the real reason is under
 Claude Console → Settings → Workload identity → History.
 
+### The subject claim is not the shape the docs suggest
+
+Worth writing down, because it cost an hour and the Anthropic documentation
+does not mention it. The documented `sub` format for a GitHub Actions workflow
+is `repo:<owner>/<repo>:<context>`, and the Console wizard pre-fills a subject
+pattern to match. GitHub actually issued this:
+
+```
+repo:patrick-andrew-taylor@17437808/skill-regression-gate@1363160760:environment:record
+```
+
+GitHub splices the **immutable numeric owner and repository ids** into the
+subject so the claim survives renames. A pattern written against the documented
+shape never matches, and the exchange fails with a deliberately opaque 401 —
+every other claim in the token was correct, and nothing in the failure says
+which check tripped.
+
+Two things follow. If an exchange is denied, go straight to the authentication
+history in the Console: each attempt records the decoded token and a `reason`
+(`match_subject_prefix`, here) rather than leaving you to guess. And write the
+subject pattern from an observed token, not from the documented shape — this
+rule pins the exact string above, which is strictly stronger than the
+documented form because the numeric ids cannot be re-registered by someone else
+after a rename.
+
 ## Adding a case
 
 ```toml
