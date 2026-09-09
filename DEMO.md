@@ -1,68 +1,125 @@
 # Ten-minute demo runbook
 
-Three durable states, all replayable offline:
+Replay only. Every state below is a re-grade of transcripts already committed to
+this repo. **Nothing in this script calls a model.** The colours are the same on
+the tenth run-through as on the first.
 
-| State | Where | Result |
+> Never run `make record` in front of the room. It calls a real model, takes
+> minutes, and produces a different transcript each time — which is the one thing
+> this demo is claiming not to do.
+
+## The three states
+
+| State | Git ref | Result |
 |---|---|---|
-| Green baseline | `main` | 47/47 checks |
-| Weakening | PR #1, commit `chore: condense the add-recipe skill` | 23/47 — check fails |
-| Fix | PR #1, commit `fix: restore the load-bearing specifics` | 47/47 — check passes |
+| Green baseline | `main` | 47/47 → 47/47, exits 0 |
+| Weakened skill | `origin/chore/condense-add-recipe-skill` (`96b5424`) | 47/47 → **23/47**, `make: *** Error 1` |
+| Fix | `demo/fix-restore` (`1bad3a9`) | 47/47 → 47/47, exits 0 |
 
-Nothing here calls a model. Every state is a replay of committed transcripts,
-so the colours are the same on the tenth run as the first.
+Every state is driven by one command:
+
+```bash
+make gate-ref REF=<ref>
+```
+
+That is what CI runs — replay the ref, replay the merge base with *this*
+checkout's grader, diff the two — except that it stages both sides in throwaway
+worktrees instead of checking anything out.
+
+**Stay on `main` for the whole demo. Do not `git switch` to the demo states.**
+The runbook you are reading is a tracked file, so detaching HEAD to a historical
+commit replaces this file with that commit's older version of itself, mid-demo.
+`gate-ref` exists so you never have to. It never moves HEAD and never dirties
+the tree.
+
+It reads `origin/main` from the local clone, so the whole demo works with the
+network unplugged.
+
+### Watching the run on a second screen
+
+Prefix any step with `make log DO=…` to mirror it to a file as well as the
+terminal:
+
+```bash
+make log DO=gate-ref REF=demo/fix-restore     # instead of: make gate-ref REF=…
+tail -f demo.log                              # in a second window
+```
+
+It appends with a timestamped header per run, so the whole demo reads back as
+one transcript afterwards. The gate's exit status survives the pipe — a red
+state still exits non-zero when logged. `make clean` deliberately leaves
+`demo.log` alone; delete it by hand.
+
+Each run also drops machine-readable artifacts in `.gate/`: `report.md` (the
+Markdown posted to the PR), plus `head.json` and `base.json` (per-check
+results). Those are overwritten on every run, so copy them aside if you want to
+keep a particular state.
+
+PR #1 is the visual backdrop. Its branch is parked on the weakening commit, so it
+opens **red with the merge button blocked**. The green run for the fix commit is
+permanently in that PR's check history (run `34398214838`), and the fix commit
+itself is tagged `demo/fix-restore` so it survives independently of the branch.
 
 ## Before the room
 
 ```bash
-git switch main && make test && make replay     # warm up, confirm 47/47
+git switch main && git status        # must be clean; stay here all demo
+make test                            # 41 tests OK
+make gate-ref REF=main               # 47/47 → 47/47
 ```
 
-Open three tabs: the PR's **Files changed**, the PR's **Checks**, and the PR
-conversation scrolled to the gate comment.
+Open three browser tabs on PR #1: **Files changed**, **Checks**, and the
+conversation scrolled to the `skill-regression-gate` comment.
 
-## Beat 1 — the problem (1 min)
+---
+
+## 1 — The problem (1 min)
 
 > A skill is a prompt. Prompts get edited like prose — someone tightens the
-> wording, drops a paragraph that reads like boilerplate. Nothing in review
+> wording and drops a paragraph that reads like boilerplate. Nothing in review
 > catches it, because the diff looks like an improvement.
 
-Show `skills/add-recipe/SKILL.md` on main. Point at the table templates and the
-`sips` note: the stuff that looks most deletable.
+Show `skills/add-recipe/SKILL.md` on `main`. Point at the frontmatter template,
+the table templates and the `sips` note — the stuff that looks most deletable.
 
-## Beat 2 — main is green (1 min)
+## 2 — Baseline is green (1 min)
 
 ```bash
-make replay
+make gate-ref REF=main
 ```
 
-47 checks, 6 cases, no network. Say what the checks are: filename comparisons,
-frontmatter lookups, a "does this heading touch a table" scan. **No model judges
-the output** — that is what makes a red state stay red.
+**They should see:** 47 checks across 6 cases, 100%, in about a second with no
+network. Say what the checks actually are — filename comparisons, frontmatter
+lookups, a "does this heading touch a table" scan. **No model judges the
+output.** That is what lets a red state stay red.
 
-## Beat 3 — the weakening PR (2 min)
+## 3 — The weakening PR (2 min)
 
-Open **Files changed** on PR #1. 149 lines down to 60. Read the commit message
-aloud — it is a reasonable-sounding cleanup, and it is the kind of PR that gets
+Open **Files changed** on PR #1: 149 lines down to 60. Read the commit message
+aloud. It is a reasonable-sounding cleanup and it is the kind of PR that gets
 approved.
 
 Ask the room: *does this break anything?*
 
-## Beat 4 — the gate says yes (2 min)
+## 4 — The gate says yes (2 min)
 
-Open **Checks**. `skill-gate` is red and it is a required check — the merge
-button is blocked.
+```bash
+make gate-ref REF=origin/chore/condense-add-recipe-skill
+```
 
-Then the PR comment: **47/47 → 23/47**, a per-case before/after table, and one
-expandable block per regression carrying *why the rule exists*, not just which
-assertion tripped:
+**They should see:** `47/47 → 23/47`, a per-case before/after table, and a
+failing exit (`make: *** [gate-ref] Error 1`). Then the **Checks** tab: the same result, and
+`skill regression gate` is a *required* check, so the merge button is blocked.
 
-- the ingredient table lost its `| Ingredient | Quantity |` header and `|:-:|:-:|`
-  separator
+The PR comment carries one expandable block per regression with *why the rule
+exists*, not just which assertion tripped:
+
+- the ingredient table lost its `| Ingredient | Quantity |` header and `|:-:|:-:|` separator
 - every recipe lost the one-sentence lede the Jekyll index uses as its card excerpt
 - `image.path` / `thumbnail` / `caption` vanished from the frontmatter
-- `Mac & Cheese` started slugging as `mac-and-cheese-casserole`
+- the `tag` enum drifted
 
-## Beat 5 — the part worth pausing on (1.5 min)
+## 5 — The part worth pausing on (1.5 min)
 
 Not everything that was deleted regressed. The `sips` height-then-width checks
 stayed green even though the note explaining them was cut, and the Kramdown
@@ -71,75 +128,49 @@ blank-line rule held even though the **CRITICAL** paragraph was deleted.
 > The gate measures behaviour, not text. It tells you which parts of your
 > cleanup were free and which cost you something.
 
-This is also the calibration story — the first version of this suite scored
-100% against a deliberately gutted skill, because it was asserting things a
-capable model reconstructs on its own. See the "Choosing checks that actually
-measure the skill" section of the README. **A check earns its place only if a
-competent model would get it wrong without the skill.**
+This is also the calibration story: the first version of this suite scored 100%
+against a deliberately gutted skill, because it asserted things a capable model
+reconstructs on its own. **A check earns its place only if a competent model
+would get it wrong without the skill.** See `FINDINGS.md`.
 
-## Beat 6 — the fix (1.5 min)
-
-Show the second commit on the PR. It restores steps 3 and 5 and *keeps* step 4
-condensed, because the gate proved that part was safe. Check goes green,
-47/47, merge unblocks.
-
-## Beat 7 — how it stays honest (1 min)
+## 6 — The fix (1.5 min)
 
 ```bash
-make fingerprint      # the skill's hash
+make gate-ref REF=demo/fix-restore
 ```
 
-A transcript's filename is a hash over the skill text, the output contract, the
-case prompt and the model id. Edit the skill and the old transcripts stop
-resolving:
+**They should see:** back to 47/47, exit 0. This commit restores steps 3 and 5
+and deliberately *keeps* step 4 condensed — because the gate proved that part of
+the cleanup was free. The green run for this exact commit is in PR #1's check
+history.
+
+## 7 — How it stays honest (1 min)
+
+This is the only beat that touches the working tree — it edits `SKILL.md` in
+place and puts it straight back.
 
 ```bash
+make fingerprint
 sed -i '' '1s/^/# tweak\n/' skills/add-recipe/SKILL.md
-make replay           # every case: MISSING_CASSETTE
-git checkout skills/add-recipe/SKILL.md
+make replay                              # every case: MISSING_CASSETTE
+git checkout skills/add-recipe/SKILL.md  # put it back
 ```
 
-You cannot change the skill and coast on stale evidence. And the comparison is
-against the merge base, re-graded on every run with *this* branch's grader — not
-a baseline file that the same PR could quietly edit.
+**They should see:** `0/47 checks (0%)`, every case `MISSING_CASSETTE`. A
+cassette's filename is a hash over the skill text, the output contract, the case
+prompt and the model id. Touch the skill and the old transcripts stop resolving —
+you cannot change a skill and coast on stale evidence. And the comparison is
+against the merge base, re-graded on every run with this branch's grader, not a
+baseline file the same PR could quietly edit.
 
-## Re-arming the red state
+(This is the one beat that uses `make replay` rather than `make gate` — replay
+shows the fingerprint effect on its own, without a merge-base diff layered on
+top. It is still pure replay; no model is called.)
 
-Once the fix commit is pushed the PR is green, so re-point the branch at the
-weakening commit before the next run-through:
+## 8 — Reset
 
-```bash
-git switch chore/condense-add-recipe-skill
-git push --force-with-lease origin HEAD~1:chore/condense-add-recipe-skill   # PR goes red
-# ...demo...
-git push origin chore/condense-add-recipe-skill                             # PR goes green
-```
-
-Both pushes re-trigger `skill-gate`, which updates the same PR comment in place
-rather than stacking a new one.
-
-## If the network dies
-
-The whole demo works offline — the gate never needed GitHub:
+Nothing moved HEAD, so this is just tidying the scratch directory:
 
 ```bash
-git switch chore/condense-add-recipe-skill
-git switch --detach HEAD~1        # the weakening state
-make gate                          # prints the same before/after report
-```
-
-`make gate` compares against `origin/main`; with no network use a local ref:
-
-```bash
-git worktree add .gate/base main && \
-  python3 -m gate run --mode replay --skill .gate/base/skills/add-recipe/SKILL.md \
-    --cases .gate/base/evals/cases --cassettes .gate/base/evals/cassettes --out .gate/base.json
-python3 -m gate run --mode replay --out .gate/head.json
-python3 -m gate compare --base .gate/base.json --head .gate/head.json
-```
-
-## Reset afterwards
-
-```bash
-git switch main && git checkout . && make clean
+git status && make clean     # expect a clean tree on main
 ```

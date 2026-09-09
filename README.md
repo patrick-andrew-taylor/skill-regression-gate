@@ -75,9 +75,15 @@ The harness has **no pip dependencies**. CI installs `python3` and nothing else.
 make test         # unit tests for the graders + lint of the eval suite
 make replay       # grade the committed transcripts — no model calls
 make gate         # exactly what CI does: replay this branch, compare to origin/main
+make gate-ref REF=<ref>   # the same, for any ref, without checking it out
 make record       # re-record transcripts against a real model
 make fingerprint  # print the current skill fingerprint
 ```
+
+`gate-ref` stages both sides in throwaway worktrees, so it can grade a historical
+commit without moving `HEAD` or touching the working tree. That is what
+[`DEMO.md`](DEMO.md) uses: checking out an old commit would also roll back every
+other tracked file, including the runbook being read from.
 
 `make record` shells out to the `claude` CLI in headless mode with `--tools ""`,
 `--setting-sources ""`, `--strict-mcp-config` and `--disable-slash-commands`,
