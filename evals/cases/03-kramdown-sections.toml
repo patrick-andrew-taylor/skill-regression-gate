@@ -64,3 +64,14 @@ id = "table_separator"
 kind = "body_regex_present"
 pattern = '\|\s*:-:\s*\|\s*:-:\s*\|'
 why = "Step 5 pins the centred separator row |:-:|:-:| for ingredient tables."
+
+[[checks]]
+id = "table_header"
+kind = "body_regex_present"
+pattern = '\|\s*Ingredient\s*\|\s*Quantity\s*\|'
+why = "The step 5 template pins the ingredient table's columns to 'Ingredient | Quantity'. Nothing in the task implies those words or that order — it survives only if the skill carries it."
+
+[[checks]]
+id = "lede"
+kind = "lede_present"
+why = "The step 5 template places a one-sentence description between the frontmatter and the first heading. The Jekyll index uses it as the recipe card excerpt, so losing it blanks out the listing page."

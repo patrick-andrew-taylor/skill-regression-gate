@@ -236,6 +236,25 @@ def _c_subsection_count(out, spec):
     return False, f"expected {want} `###` subsection(s) under `## {spec['under']}`, found {count}", ""
 
 
+def _c_lede_present(out, spec):
+    """The skill puts a one-sentence description between frontmatter and body."""
+    _, content = _the_recipe(out)
+    if content is None:
+        return False, "no single recipe file to check", ""
+    doc = mdparse.parse_recipe(content)
+    for _, line in mdparse.iter_lines_outside_fences(doc.body):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if mdparse.heading_of(line) is not None:
+            return False, "body jumps straight to a heading with no description paragraph", stripped
+        if mdparse.is_table_row(line):
+            return False, "body starts with a table, not a description paragraph", stripped
+        shown = stripped if len(stripped) <= 70 else stripped[:69] + "\u2026"
+        return True, f'lede present: "{shown}"', ""
+    return False, "body is empty", ""
+
+
 def _c_body_regex_present(out, spec):
     _, content = _the_recipe(out)
     if content is None:
@@ -279,6 +298,7 @@ CHECKS = {
     "frontmatter_matches": _c_frontmatter_matches,
     "heading_table_blank_line": _c_heading_table_blank_line,
     "subsection_count": _c_subsection_count,
+    "lede_present": _c_lede_present,
     "body_regex_present": _c_body_regex_present,
     "shell_regex_present": _c_shell_regex_present,
     "shell_regex_absent": _c_shell_regex_absent,

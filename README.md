@@ -117,6 +117,40 @@ Check kinds live in [`gate/grade.py`](gate/grade.py); `make test` fails on an
 unknown kind, a duplicate check id, a missing `why`, or a regex that doesn't
 compile.
 
+## Choosing checks that actually measure the skill
+
+The first version of this suite was wrong, in a way worth writing down.
+
+It asserted things like "the slug drops the ampersand" and "a heading never
+touches a table". Those are real rules in the skill — but when the skill was
+gutted to prove the gate worked, **the suite still scored 100%**. Told only to
+produce `-z <dimensions>`, the model wrote `-z 400 300` anyway. Told to keep the
+file "free of unnecessary blank lines", it kept the Kramdown blank lines anyway.
+A capable model reconstructs good slug hygiene and correct Markdown from priors,
+with or without the skill.
+
+So those checks were measuring the model, not the artifact. A green run proved
+nothing, and — worse — a gate like that fails *open*: it would have waved a real
+regression through.
+
+The checks that survive are the ones covering conventions the model cannot
+infer, because they are arbitrary choices this project made:
+
+- `author: pjt` — not derivable from anything in the task
+- ingredient tables headed exactly `| Ingredient | Quantity |`
+- the centred separator `|:-:|:-:|`, where an unprompted model writes `|---|---|`
+- the one-sentence lede between frontmatter and body, which the Jekyll index
+  uses as the card excerpt
+- `image.path` / `image.thumbnail` / `image.caption` as the frontmatter keys
+- omitting the `image:` block *entirely* when there is no photo
+- `categories` and `tags` drawn from fixed enums, spelled exactly
+
+The general rule: **a check earns its place only if a competent model would get
+it wrong without the skill.** Anything else is measuring the model's priors and
+calling it coverage. The load-bearing checks are the boring, arbitrary,
+project-specific ones — which is also, not coincidentally, exactly the content
+that looks like deletable boilerplate to someone tidying up a prompt.
+
 ## Policy
 
 [`gate.toml`](gate.toml):

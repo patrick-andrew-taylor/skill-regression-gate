@@ -207,6 +207,27 @@ class TestImageOmission(unittest.TestCase):
         self.assertFalse(passed)
 
 
+class TestLede(unittest.TestCase):
+    """The one-sentence excerpt the Jekyll index renders on the recipe card."""
+
+    spec = {"id": "lede", "kind": "lede_present"}
+
+    def test_present(self):
+        passed, detail, _ = grade.CHECKS["lede_present"](out({"_recipes/z.md": GOOD}), self.spec)
+        self.assertTrue(passed, detail)
+        self.assertIn("A weeknight bake.", detail)
+
+    def test_missing_when_body_starts_with_heading(self):
+        no_lede = GOOD.replace("A weeknight bake.\n\n", "")
+        passed, detail, _ = grade.CHECKS["lede_present"](out({"_recipes/z.md": no_lede}), self.spec)
+        self.assertFalse(passed, detail)
+
+    def test_missing_when_body_starts_with_table(self):
+        text = "---\nauthor: pjt\n---\n\n| a | b |\n|:-:|:-:|\n"
+        passed, _, _ = grade.CHECKS["lede_present"](out({"_recipes/z.md": text}), self.spec)
+        self.assertFalse(passed)
+
+
 class TestUnparseableOutput(unittest.TestCase):
     def test_marks_case_errored_and_fails_every_check(self):
         case = {

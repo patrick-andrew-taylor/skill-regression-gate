@@ -62,3 +62,26 @@ id = "sips_thumb_not_reversed"
 kind = "shell_regex_absent"
 pattern = 'sips[^\n]*-z\s+300\s+400'
 why = "'-z 300 400' silently produces a 225x300 landscape-constrained thumbnail, which crops the recipe card on the site."
+
+[[checks]]
+id = "image_caption"
+kind = "frontmatter_key_present"
+key = "image.caption"
+why = "The 'With image' template carries a caption alongside path and thumbnail; the theme renders it beneath the hero image."
+
+[[checks]]
+id = "table_header"
+kind = "body_regex_present"
+pattern = '\|\s*Ingredient\s*\|\s*Quantity\s*\|'
+why = "The step 5 template pins the ingredient table's columns to 'Ingredient | Quantity'. Nothing in the task implies those words or that order — it survives only if the skill carries it."
+
+[[checks]]
+id = "table_separator"
+kind = "body_regex_present"
+pattern = '\|\s*:-:\s*\|\s*:-:\s*\|'
+why = "The step 5 template pins the centred separator row |:-:|:-:|. A model writing a Markdown table unprompted defaults to |---|---|, so this is a pure skill-carried convention."
+
+[[checks]]
+id = "lede"
+kind = "lede_present"
+why = "The step 5 template places a one-sentence description between the frontmatter and the first heading. The Jekyll index uses it as the recipe card excerpt, so losing it blanks out the listing page."
