@@ -6,7 +6,7 @@ prompt = """
 Add this recipe to the cookbook. It is fully plant based.
 
 Title: Red Lentil and Coconut Soup
-Author: pjt
+Author: pat
 Photo: none
 
 Ingredients:
@@ -48,8 +48,8 @@ why = "The step 2 tag enum is exactly Vegetarian, Vegan, Meat. A plant-based rec
 id = "author"
 kind = "frontmatter_scalar_equals"
 key = "author"
-expect = "pjt"
-why = "Step 5 frontmatter template pins author to pjt."
+expect = "pat"
+why = "Step 5 frontmatter template pins author to pat."
 
 [[checks]]
 id = "title_present"

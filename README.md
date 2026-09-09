@@ -136,7 +136,7 @@ regression through.
 The checks that survive are the ones covering conventions the model cannot
 infer, because they are arbitrary choices this project made:
 
-- `author: pjt` — not derivable from anything in the task
+- `author: pat` — not derivable from anything in the task
 - ingredient tables headed exactly `| Ingredient | Quantity |`
 - the centred separator `|:-:|:-:|`, where an unprompted model writes `|---|---|`
 - the one-sentence lede between frontmatter and body, which the Jekyll index

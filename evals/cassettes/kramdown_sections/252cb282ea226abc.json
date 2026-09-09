@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "case_id": "kramdown_sections",
+  "model": "claude-sonnet-5",
+  "skill_fingerprint": "0273f7687ae6",
+  "stimulus_key": "252cb282ea226abc",
+  "recorded_at": "2026-09-09T19:51:10+00:00",
+  "recorder": "claude-cli",
+  "session_id": "6810e239-ad13-4bce-b580-350258594eda",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 486,
+    "cost_usd": 0.0129706
+  },
+  "output": "<<<FILE: _recipes/baked-ziti.md>>>\n---\nauthor: pat\ntitle: Baked Ziti\ncategories: [Entrees]\ntags: [Vegetarian]\n---\n\nA comforting baked pasta with a simple simmered tomato sauce, creamy ricotta, and melted mozzarella and parmesan on top.\n\n## Ingredients\n\n### Sauce\n\n| Ingredient | Quantity |\n|:-:|:-:|\n| Crushed tomatoes | One 28oz can |\n| Olive oil | 3 tbsp |\n| Garlic, minced | 4 cloves |\n| Red pepper flakes | 1/2 tsp |\n\n### Assembly\n\n| Ingredient | Quantity |\n|:-:|:-:|\n| Ziti | 1 lb |\n| Whole milk ricotta | 15 oz |\n| Low-moisture mozzarella, shredded | 2 cups |\n| Parmesan, grated | 1/2 cup |\n\n## Instructions\n\n### Sauce\n1. Warm the oil, garlic and pepper flakes until fragrant.\n2. Add the tomatoes and simmer 20 minutes.\n\n### Assembly\n1. Boil the ziti two minutes shy of al dente.\n2. Fold the pasta with the sauce and ricotta.\n3. Layer into a dish, top with mozzarella and parmesan.\n4. Bake at 400F for 25 minutes.\n<<<END FILE>>>"
+}

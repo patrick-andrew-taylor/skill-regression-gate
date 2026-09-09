@@ -19,7 +19,7 @@ def out(files=None, shell=""):
 
 
 GOOD = """---
-author: pjt
+author: pat
 title: Baked Ziti
 categories: [Entrees]
 tags: [Vegetarian]
@@ -73,7 +73,7 @@ class TestContractParser(unittest.TestCase):
 class TestFrontmatter(unittest.TestCase):
     def test_nested_image_block(self):
         text = (
-            "---\nauthor: pjt\nimage:\n  path: /assets/img/x.jpg\n"
+            "---\nauthor: pat\nimage:\n  path: /assets/img/x.jpg\n"
             "  thumbnail: /assets/img/x-300x400.jpg\n  caption: \"A pie\"\n"
             "categories: [Desserts]\n---\n\nbody\n"
         )
@@ -84,7 +84,7 @@ class TestFrontmatter(unittest.TestCase):
         self.assertEqual(doc.frontmatter["categories"], ["Desserts"])
 
     def test_missing_key_is_sentinel(self):
-        doc = mdparse.parse_recipe("---\nauthor: pjt\n---\n\nbody\n")
+        doc = mdparse.parse_recipe("---\nauthor: pat\n---\n\nbody\n")
         self.assertIs(mdparse.dig(doc.frontmatter, "image"), mdparse.MISSING)
         self.assertIs(mdparse.dig(doc.frontmatter, "image.path"), mdparse.MISSING)
 
@@ -116,7 +116,7 @@ class TestKramdownRule(unittest.TestCase):
 
     def test_ignores_headings_inside_code_fences(self):
         fenced = (
-            "---\nauthor: pjt\n---\n\n```markdown\n### Example\n| a | b |\n```\n\n"
+            "---\nauthor: pat\n---\n\n```markdown\n### Example\n| a | b |\n```\n\n"
             "## Ingredients\n\n| a | b |\n"
         )
         passed, _, _ = grade.CHECKS["heading_table_blank_line"](
@@ -200,7 +200,7 @@ class TestImageOmission(unittest.TestCase):
         self.assertTrue(passed)
 
     def test_present_image_fails(self):
-        withimg = GOOD.replace("author: pjt", "author: pjt\nimage:\n  path: /x.jpg")
+        withimg = GOOD.replace("author: pat", "author: pat\nimage:\n  path: /x.jpg")
         passed, _, _ = grade.CHECKS["frontmatter_key_absent"](
             out({"_recipes/z.md": withimg}), {"kind": "frontmatter_key_absent", "key": "image"}
         )
@@ -223,7 +223,7 @@ class TestLede(unittest.TestCase):
         self.assertFalse(passed, detail)
 
     def test_missing_when_body_starts_with_table(self):
-        text = "---\nauthor: pjt\n---\n\n| a | b |\n|:-:|:-:|\n"
+        text = "---\nauthor: pat\n---\n\n| a | b |\n|:-:|:-:|\n"
         passed, _, _ = grade.CHECKS["lede_present"](out({"_recipes/z.md": text}), self.spec)
         self.assertFalse(passed)
 

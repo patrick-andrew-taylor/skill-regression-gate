@@ -3,12 +3,12 @@ title = "Thumbnail is generated with sips height-then-width"
 targets = "SKILL.md step 4 — image processing; step 5 — 'With image' template"
 
 prompt = """
-Add this recipe to the cookbook. The photo is at /Users/pjt/Pictures/galette.png.
+Add this recipe to the cookbook. The photo is at /Users/pat/Pictures/galette.png.
 
 Title: Blueberry Galette
 Category: Desserts
 Tags: Vegetarian
-Author: pjt
+Author: pat
 
 Ingredients:
 - All-purpose flour, 1.25 cups

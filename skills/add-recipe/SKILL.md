@@ -5,7 +5,7 @@ description: Add a new recipe to the jain-taylor-family-cookbook Jekyll site —
 
 # Add a Recipe to the Family Cookbook
 
-Add a new recipe to the jain-taylor-family-cookbook Jekyll site. Repo path: `patrick-andrew-jain-taylor/jain-taylor-family-cookbook/` within this workspace.
+Add a new recipe to the jain-taylor-family-cookbook Jekyll site. Repo path: `patrick-andrew-taylor/jain-taylor-family-cookbook/` within this workspace.
 
 ## Arguments
 
@@ -15,7 +15,7 @@ Add a new recipe to the jain-taylor-family-cookbook Jekyll site. Repo path: `pat
 
 ### 1. Navigate to the cookbook repo
 
-All file operations should target `patrick-andrew-jain-taylor/jain-taylor-family-cookbook/` relative to the workspace root.
+All file operations should target `patrick-andrew-taylor/jain-taylor-family-cookbook/` relative to the workspace root.
 
 ### 2. Gather recipe details
 
@@ -25,7 +25,7 @@ If `$ARGUMENTS` doesn't include enough information, ask the user for:
 - Instructions (numbered steps)
 - Category (one of: Appetizers, Breakfast, Desserts, Drinks, Entrees, Miscellaneous, Seasonings, Soups, Side Dishes)
 - Tags (one or more of: Vegetarian, Vegan, Meat)
-- Author (`pjt` unless specified otherwise)
+- Author (`pat` unless specified otherwise)
 - A photo, if they have one (ask them to provide the file path, e.g. via `@/path/to/image.png`)
 
 ### 3. Derive the slug
@@ -62,7 +62,7 @@ Create `_recipes/<slug>.md`.
 **With image:**
 ```markdown
 ---
-author: pjt
+author: pat
 title: <Title>
 image:
   path: /assets/img/<slug>.jpg
@@ -78,7 +78,7 @@ tags: [<Tag>]
 **Without image** (omit the `image:` block entirely):
 ```markdown
 ---
-author: pjt
+author: pat
 title: <Title>
 categories: [<Category>]
 tags: [<Tag>]

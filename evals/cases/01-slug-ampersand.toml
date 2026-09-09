@@ -8,7 +8,7 @@ Add this recipe to the cookbook.
 Title: Mac & Cheese Casserole
 Category: Entrees
 Tags: Vegetarian
-Author: pjt
+Author: pat
 Photo: none
 
 Ingredients:
@@ -46,8 +46,8 @@ why = "Step 3 requires consecutive hyphens collapsed and no leading/trailing hyp
 id = "author"
 kind = "frontmatter_scalar_equals"
 key = "author"
-expect = "pjt"
-why = "Step 5 frontmatter template pins author to pjt."
+expect = "pat"
+why = "Step 5 frontmatter template pins author to pat."
 
 [[checks]]
 id = "category"
