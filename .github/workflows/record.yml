@@ -62,21 +62,32 @@ jobs:
       - name: Install the Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
 
-      # Fetched immediately before recording: GitHub's OIDC token is only valid
-      # for about five minutes. The CLI exchanges it once and caches the
-      # resulting Anthropic token, so one fetch covers a normal run — if the
-      # suite grows past the exchanged token's lifetime, re-run this step.
-      - name: Mint a GitHub OIDC token for Anthropic
-        run: |
-          set -euo pipefail
-          curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
-            | jq -er .value > "$ANTHROPIC_IDENTITY_TOKEN_FILE"
-          echo "token minted ($(wc -c < "$ANTHROPIC_IDENTITY_TOKEN_FILE") bytes)"
-
+      # GitHub's identity token expires roughly five minutes after issuance,
+      # and the Anthropic token minted from it is upper-bounded by that expiry.
+      # A full recording run is longer than that, so the assertion is refreshed
+      # in the background for the lifetime of this step. Each case is its own
+      # `claude` process and exchanges the current assertion at startup, so a
+      # fresh file is all that is needed.
       - name: Record
         run: |
           set -euo pipefail
+
+          mint() {
+            curl -sS --fail-with-body \
+              -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+              | jq -er .value > "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp"
+            # Atomic swap so a reader never sees a half-written assertion.
+            mv "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp" "$ANTHROPIC_IDENTITY_TOKEN_FILE"
+          }
+
+          mint
+          echo "assertion minted ($(wc -c < "$ANTHROPIC_IDENTITY_TOKEN_FILE") bytes)"
+
+          ( while :; do sleep 120; mint || echo "refresh failed, retrying"; done ) &
+          REFRESHER=$!
+          trap 'kill "$REFRESHER" 2>/dev/null || true' EXIT
+
           ARGS=(--mode record --model "${{ inputs.model }}")
           if [ -n "${{ inputs.case }}" ]; then
             ARGS+=(--case "${{ inputs.case }}")
@@ -85,7 +96,7 @@ jobs:
 
       - name: Drop the identity token
         if: always()
-        run: rm -f "$ANTHROPIC_IDENTITY_TOKEN_FILE"
+        run: rm -f "$ANTHROPIC_IDENTITY_TOKEN_FILE" "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp"
 
       - name: Grade the fresh transcripts
         run: python3 -m gate run --mode replay --model "${{ inputs.model }}"
