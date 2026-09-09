@@ -5,7 +5,7 @@ Three durable states, all replayable offline:
 | State | Where | Result |
 |---|---|---|
 | Green baseline | `main` | 47/47 checks |
-| Weakening | PR #1, commit `chore: condense the add-recipe skill` | 22/47 — check fails |
+| Weakening | PR #1, commit `chore: condense the add-recipe skill` | 23/47 — check fails |
 | Fix | PR #1, commit `fix: restore the load-bearing specifics` | 47/47 — check passes |
 
 Nothing here calls a model. Every state is a replay of committed transcripts,
@@ -52,7 +52,7 @@ Ask the room: *does this break anything?*
 Open **Checks**. `skill-gate` is red and it is a required check — the merge
 button is blocked.
 
-Then the PR comment: **47/47 → 22/47**, a per-case before/after table, and one
+Then the PR comment: **47/47 → 23/47**, a per-case before/after table, and one
 expandable block per regression carrying *why the rule exists*, not just which
 assertion tripped:
 
@@ -103,14 +103,39 @@ You cannot change the skill and coast on stale evidence. And the comparison is
 against the merge base, re-graded on every run with *this* branch's grader — not
 a baseline file that the same PR could quietly edit.
 
-## If the network dies
+## Re-arming the red state
 
-The whole demo works offline:
+Once the fix commit is pushed the PR is green, so re-point the branch at the
+weakening commit before the next run-through:
 
 ```bash
 git switch chore/condense-add-recipe-skill
-git checkout HEAD~1 -- .          # the weakening state
+git push --force-with-lease origin HEAD~1:chore/condense-add-recipe-skill   # PR goes red
+# ...demo...
+git push origin chore/condense-add-recipe-skill                             # PR goes green
+```
+
+Both pushes re-trigger `skill-gate`, which updates the same PR comment in place
+rather than stacking a new one.
+
+## If the network dies
+
+The whole demo works offline — the gate never needed GitHub:
+
+```bash
+git switch chore/condense-add-recipe-skill
+git switch --detach HEAD~1        # the weakening state
 make gate                          # prints the same before/after report
+```
+
+`make gate` compares against `origin/main`; with no network use a local ref:
+
+```bash
+git worktree add .gate/base main && \
+  python3 -m gate run --mode replay --skill .gate/base/skills/add-recipe/SKILL.md \
+    --cases .gate/base/evals/cases --cassettes .gate/base/evals/cassettes --out .gate/base.json
+python3 -m gate run --mode replay --out .gate/head.json
+python3 -m gate compare --base .gate/base.json --head .gate/head.json
 ```
 
 ## Reset afterwards
