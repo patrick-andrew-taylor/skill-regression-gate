@@ -9,6 +9,10 @@ stops working. Nothing in a normal review catches that — the diff looks like a
 improvement. This repo treats a skill as a testable artifact with a behavioural
 contract, and puts that contract in front of the merge button.
 
+New to eval terminology? [`docs/glossary.md`](docs/glossary.md) defines every
+term used here — cassette, stimulus key, merge base, pass^k, fail-open — with the
+nearest equivalent from ordinary CI and infrastructure work.
+
 ## The artifact under test
 
 [`skills/add-recipe/SKILL.md`](skills/add-recipe/SKILL.md) — a real, in-use skill
