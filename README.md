@@ -205,18 +205,69 @@ that looks like deletable boilerplate to someone tidying up a prompt.
 
 ```toml
 [gate]
-min_score = 1.0            # absolute floor, so a branch cut from a broken base can't coast
-allow_new_failures = false # any check that passed on the base and fails here is a regression
+min_score = 1.0             # absolute floor, so a branch cut from a broken base can't coast
+allow_new_failures = false  # any check that passed on the base and fails here is a regression
+n_samples = 1               # transcripts recorded and graded per case
+sample_pass_threshold = 1.0 # fraction of samples a check must hold on (1.0 = pass^k)
 ```
+
+### Sampling
+
+A cassette is one generation, so at `n_samples = 1` a check the model passes 70%
+of the time still looks deterministic. Raising it records that many transcripts
+per case and grades every check against all of them:
+
+```bash
+make record N=3      # three transcripts per case
+```
+
+Sample 0 keeps the historical `<key>.json` filename and extra samples are
+siblings (`<key>.s1.json`, …), so raising `n_samples` never invalidates existing
+cassettes — the suite just starts reading more of them where they exist.
+
+At `sample_pass_threshold = 1.0` a check must hold on *every* sample; one bad
+sample fails it and the run labels it `[flaky: passed 2/3 samples]`, reporting
+the detail from the sample that broke rather than one that worked. Lower the
+threshold to accept a majority instead.
+
+This repo stays at `n_samples = 1` deliberately: every check here targets a rule
+the skill states explicitly, where a correctly-primed model is near-deterministic.
+Raise it when adding a check whose pass rate is genuinely uncertain.
+
+### Provenance
+
+Every cassette records the model id, the recording timestamp, the skill
+fingerprint and the harness version that produced it, and replay prints what it
+actually found:
+
+```
+  transcripts
+    recorded by model    claude-sonnet-5
+    harness version      1.1.0
+    skill fingerprint    0273f7687ae6
+    recorded at          2026-09-09T19:50:52+00:00 … 2026-09-09T19:51:38+00:00
+  cost
+    6 cases · 1 sample(s) each · 6 transcripts · model claude-sonnet-5
+    12 in / 2498 out tokens · $0.0787 at record time
+```
+
+That is deliberately the *observed* provenance, not the requested one. A
+transcript recorded against a different model id, or by an older harness, still
+replays perfectly — it just isn't evidence about the thing you think you're
+testing. Printing it makes the difference visible for free, and a model id that
+diverges from the one requested is flagged. Cassettes recorded before provenance
+existed report `unknown` rather than being assumed current.
 
 ## What this does not do
 
 Worth saying plainly, because the design trades some fidelity for repeatability:
 
-- **One sample per case.** A cassette is a single generation, so a check that a
-  model passes 70% of the time will look deterministic here. The graders are
-  therefore aimed at rules the skill states explicitly, where a correctly-primed
-  model is near-deterministic — not at fuzzy quality judgements.
+- **One sample per case, by default.** A cassette is a single generation, so at
+  `n_samples = 1` a check that a model passes 70% of the time will look
+  deterministic here. The graders are therefore aimed at rules the skill states
+  explicitly, where a correctly-primed model is near-deterministic — not at fuzzy
+  quality judgements. Raising `n_samples` measures the flakiness rather than
+  hiding it, at linear cost in recording.
 - **Replay grades a recording, not live behaviour.** If the underlying model
   changes, the committed transcripts do not. That drift is caught by re-running
   `record-transcripts`, which surfaces it as an ordinary before/after diff, not

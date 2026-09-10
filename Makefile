@@ -13,7 +13,7 @@ LOG     ?= demo.log
 help:
 	@echo "make test        run the harness unit tests and eval-suite lint"
 	@echo "make replay      grade the committed transcripts (no model calls)"
-	@echo "make record      re-record transcripts against a real model (needs the claude CLI)"
+	@echo "make record      re-record transcripts against a real model (needs the claude CLI; N=<k>)"
 	@echo "make gate        replay this branch and compare it against origin/main"
 	@echo "make gate-ref    same, for an arbitrary ref, without moving HEAD (REF=<ref>)"
 	@echo "make log         run any target, mirrored to \$$LOG (DO=<target> [REF=<ref>])"
@@ -25,8 +25,11 @@ test:
 replay:
 	$(PY) -m gate run --mode replay --skill $(SKILL) --model $(MODEL)
 
+# N overrides gate.toml's n_samples for this recording only.
+N ?=
 record:
-	$(PY) -m gate run --mode record --skill $(SKILL) --model $(MODEL)
+	$(PY) -m gate run --mode record --skill $(SKILL) --model $(MODEL) \
+		$(if $(N),--samples $(N),)
 
 fingerprint:
 	@$(PY) -c "import sys;sys.path.insert(0,'.');from gate import runner;print(runner.skill_fingerprint(runner.read_skill('$(SKILL)')))"
