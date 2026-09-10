@@ -238,6 +238,16 @@ This repo stays at `n_samples = 1` deliberately: every check here targets a rule
 the skill states explicitly, where a correctly-primed model is near-deterministic.
 Raise it when adding a check whose pass rate is genuinely uncertain.
 
+That claim has been measured rather than assumed. Three independent generations
+per case are committed, and **all 47 checks pass on all three** (`47/47` at
+pass^3, 18 transcripts). So the single-sample score is not one lucky roll being
+reported as a fact — the checks really are stable under resampling, which is
+what makes grading a single cassette defensible here. Re-check it any time:
+
+```bash
+python3 -m gate run --mode replay --samples 3
+```
+
 ### Provenance
 
 Every cassette records the model id, the recording timestamp, the skill
