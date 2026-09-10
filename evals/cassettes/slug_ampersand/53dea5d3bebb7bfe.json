@@ -5,6 +5,8 @@
   "skill_fingerprint": "0273f7687ae6",
   "stimulus_key": "53dea5d3bebb7bfe",
   "recorded_at": "2026-09-09T19:50:52+00:00",
+  "harness_version": "1.0.0",
+  "harness_version_backfilled": true,
   "recorder": "claude-cli",
   "session_id": "3b42a98b-4e89-4cd7-bac1-592eaeacf241",
   "usage": {

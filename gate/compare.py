@@ -15,7 +15,15 @@ from pathlib import Path
 
 MARKER = "<!-- skill-regression-gate -->"
 
-DEFAULT_POLICY = {"min_score": 1.0, "allow_new_failures": False}
+DEFAULT_POLICY = {
+    "min_score": 1.0,
+    "allow_new_failures": False,
+    # Sampling. n_samples = 1 is the historical single-generation behaviour;
+    # sample_pass_threshold = 1.0 means a check must hold on *every* sample
+    # (pass^k) rather than on a majority.
+    "n_samples": 1,
+    "sample_pass_threshold": 1.0,
+}
 
 
 def load_policy(path: Path | None) -> dict:

@@ -24,6 +24,14 @@ class CheckResult:
     detail: str
     why: str = ""
     evidence: str = ""
+    # Multi-sample bookkeeping. With the default n_samples = 1 these are always
+    # 1/1 and `passed` is simply the single sample's verdict.
+    samples_passed: int = 1
+    samples_total: int = 1
+
+    @property
+    def pass_rate(self) -> float:
+        return self.samples_passed / self.samples_total if self.samples_total else 0.0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -341,3 +349,54 @@ def grade(case: dict, out: AgentOutput) -> CaseResult:
             )
         )
     return result
+
+
+def grade_samples(case: dict, outs: list, threshold: float = 1.0) -> CaseResult:
+    """Grade k transcripts of the same case and collapse them to one result.
+
+    Each check is run against every sample; the check passes only if the
+    fraction of samples passing it meets `threshold` (pass^k at threshold 1.0).
+    The reported detail and evidence come from the first failing sample, so a
+    flaky check shows you the run that broke rather than the run that worked.
+
+    With a single sample this is exactly `grade`, which is what keeps the
+    default n_samples = 1 path byte-identical to the pre-multi-sample harness.
+    """
+    if not outs:
+        raise ValueError("grade_samples requires at least one sample")
+    if len(outs) == 1:
+        return grade(case, outs[0])
+
+    per_sample = [grade(case, out) for out in outs]
+    n = len(per_sample)
+    merged = CaseResult(
+        case_id=case["id"], title=case["title"], targets=case.get("targets", "")
+    )
+    # A sample that could not be parsed poisons the whole case, exactly as it
+    # would in the single-sample path.
+    errored = [r for r in per_sample if r.error]
+    if errored:
+        merged.error = errored[0].error
+
+    for i, spec in enumerate(case["checks"]):
+        variants = [r.checks[i] for r in per_sample]
+        passed_n = sum(1 for c in variants if c.passed)
+        first_fail = next((c for c in variants if not c.passed), None)
+        source = first_fail or variants[0]
+        rate = passed_n / n
+        detail = source.detail
+        if passed_n not in (0, n):
+            detail = f"{detail}  [flaky: passed {passed_n}/{n} samples]"
+        merged.checks.append(
+            CheckResult(
+                id=spec["id"],
+                kind=spec["kind"],
+                passed=rate >= threshold,
+                detail=detail,
+                why=spec.get("why", ""),
+                evidence=source.evidence,
+                samples_passed=passed_n,
+                samples_total=n,
+            )
+        )
+    return merged

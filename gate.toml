@@ -7,3 +7,17 @@
 [gate]
 min_score = 1.0
 allow_new_failures = false
+
+# Sampling.
+#
+# A cassette is one generation, so with n_samples = 1 a check that the model
+# passes 70% of the time still looks deterministic here. Raising n_samples
+# records that many transcripts per case and grades the check against all of
+# them; sample_pass_threshold is the fraction that must pass for the check to
+# count as passed. At 1.0 that is pass^k -- one bad sample fails the check.
+#
+# Kept at 1 because every check in this suite targets a rule the skill states
+# explicitly, where a correctly-primed model is near-deterministic. Raise it
+# when adding a check whose pass rate is genuinely uncertain, and re-record.
+n_samples = 1
+sample_pass_threshold = 1.0
