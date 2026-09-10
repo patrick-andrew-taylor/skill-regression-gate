@@ -205,6 +205,7 @@ def run(
     only: list[str] | None = None,
     n_samples: int = 1,
     sample_pass_threshold: float = 1.0,
+    start_sample: int = 0,
     log=print,
 ) -> dict:
     skill_text = read_skill(skill_path)
@@ -229,7 +230,11 @@ def run(
         path = cassette_path(cassettes_dir, case["id"], key)
 
         if mode == "record":
-            for s in range(n_samples):
+            # start_sample lets you add samples to an existing suite without
+            # regenerating sample 0. That matters because sample 0 is the
+            # transcript every single-sample replay grades: re-rolling it
+            # silently changes what the suite scores.
+            for s in range(start_sample, n_samples):
                 target = cassette_path(cassettes_dir, case["id"], key, s)
                 suffix = "" if n_samples == 1 else f" sample {s + 1}/{n_samples}"
                 log(f"  recording {case['id']}{suffix} … ", end="", flush=True)
@@ -272,7 +277,12 @@ def run(
         for cassette in cassettes:
             _accumulate(usage, cassette)
             seen["model"].add(cassette.get("model") or "unknown")
-            seen["harness"].add(cassette.get("harness_version") or "unknown")
+            hv = cassette.get("harness_version") or "unknown"
+            # A reconstructed version is weaker evidence than a stamped one, so
+            # it never gets to look like the real thing in the summary.
+            if cassette.get("harness_version_backfilled"):
+                hv = f"{hv} (backfilled)"
+            seen["harness"].add(hv)
             seen["fingerprint"].add(cassette.get("skill_fingerprint") or "unknown")
             if cassette.get("recorded_at"):
                 recorded_at.append(cassette["recorded_at"])

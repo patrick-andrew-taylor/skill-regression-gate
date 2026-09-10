@@ -34,6 +34,7 @@ def cmd_run(args) -> int:
         only=args.case or None,
         n_samples=n_samples,
         sample_pass_threshold=policy["sample_pass_threshold"],
+        start_sample=args.start_sample,
     )
     if args.out:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -156,6 +157,9 @@ def main(argv=None) -> int:
                        help="where n_samples and the sample threshold are read from")
     p_run.add_argument("--samples", type=int, default=None,
                        help="override gate.toml's n_samples for this run")
+    p_run.add_argument("--start-sample", type=int, default=0,
+                       help="record from this sample index up; use 1 to add "
+                            "samples without regenerating sample 0")
     p_run.set_defaults(fn=cmd_run)
 
     p_cmp = sub.add_parser("compare", help="diff two JSON reports and apply gate policy")

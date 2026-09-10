@@ -146,6 +146,28 @@ class TestCassettePaths(unittest.TestCase):
             self.assertEqual(len(found), 2)
 
 
+class TestCommittedCassetteProvenance(unittest.TestCase):
+    """The six committed cassettes must carry traceable provenance."""
+
+    def setUp(self):
+        root = Path(__file__).resolve().parent.parent
+        self.cassettes = [
+            json.loads(p.read_text())
+            for p in sorted((root / "evals/cassettes").glob("*/*.json"))
+        ]
+
+    def test_every_cassette_records_all_four_provenance_fields(self):
+        for c in self.cassettes:
+            for field in ("model", "recorded_at", "skill_fingerprint", "harness_version"):
+                self.assertIn(field, c, f"{c.get('case_id')} is missing {field}")
+
+    def test_reconstructed_versions_are_marked_as_such(self):
+        """A backfilled value must never be indistinguishable from a stamped one."""
+        for c in self.cassettes:
+            if c.get("harness_version_backfilled"):
+                self.assertEqual(c["harness_version"], "1.0.0")
+
+
 class TestProvenance(unittest.TestCase):
     def test_harness_version_is_the_package_version(self):
         from gate import __version__

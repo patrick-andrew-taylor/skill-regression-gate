@@ -25,11 +25,13 @@ test:
 replay:
 	$(PY) -m gate run --mode replay --skill $(SKILL) --model $(MODEL)
 
-# N overrides gate.toml's n_samples for this recording only.
+# N overrides gate.toml's n_samples for this recording only. FROM=1 adds
+# samples without regenerating sample 0 -- the transcript replay grades.
 N ?=
+FROM ?=
 record:
 	$(PY) -m gate run --mode record --skill $(SKILL) --model $(MODEL) \
-		$(if $(N),--samples $(N),)
+		$(if $(N),--samples $(N),) $(if $(FROM),--start-sample $(FROM),)
 
 fingerprint:
 	@$(PY) -c "import sys;sys.path.insert(0,'.');from gate import runner;print(runner.skill_fingerprint(runner.read_skill('$(SKILL)')))"
